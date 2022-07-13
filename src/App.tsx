@@ -1,6 +1,7 @@
 import React, { ChangeEvent, FormEvent, useState } from 'react';
 import classNames from 'classnames';
 import './App.css';
+import { useForm } from 'react-hook-form';
 
 interface userFormModel {
   firstname: string;
@@ -26,107 +27,71 @@ interface userFormDirtyModel {
 
 
 const App: React.FC = () => {
-  const [formState, setFormState] = useState<userFormModel>({
-    firstname: '',
-    lastname: '',
-    age: '',
-    gender: undefined
-  });
 
-  const [formValid, setFormValid] = useState<userFormValidModel>({
-    firstname: false,
-    lastname: false,
-    age: false,
-    gender: false
-  });
+  const {register, handleSubmit, formState} = useForm<userFormModel>()
 
-  const [formDirty, setFormDirty] = useState<userFormDirtyModel>({
-    firstname: false,
-    lastname: false,
-    age: false,
-    gender: false
-  });
-
-  const setInput = (e: ChangeEvent<HTMLInputElement>) => { 
-    const value = e.target.value;
-    const name = e.target.name;
-    let valid = false;
-    switch(name) {
-      case 'firstname':
-        valid = value.length > 0;
-        break;
-      case 'lastname':
-        valid = value.length > 0;
-        break;
-      case 'age':
-        valid = value.length > 0 && !isNaN(parseFloat(value));
-        break;
-      case 'gender':
-        valid = ['Male', 'Female', 'NB'].includes(value);
-        break;
-    }
-    setFormDirty({...formDirty, [name]: true});
-    setFormValid({...formValid, [name]: valid});
-    setFormState({...formState, [name]: value});
-  }
-
-  const isFormValid = () => {
-    // @ts-ignore
-    return Object.keys(formValid).every(k => formValid[k]);
-  }
-
-  const save = (e: FormEvent<HTMLFormElement>) => {
-    console.log('aaaaa submit')
-    e.preventDefault();
-    if(!isFormValid()) {
-      alert('controlla i tuoi dati');
-      return;
-    }
+  const save = (e: any) => {
     
-    console.log('salva', formState);
+    console.log('salva', e);
   }
+
+  const ageRgx = /^\d+$/;
+
+  console.log('fs', formState.errors);
 
   return (
-    <form onSubmit={save}>
+    <form onSubmit={handleSubmit(save)}>
     <div className="form-group">
       <label htmlFor="firstname">Nome</label>
-      <input type="text" 
-      className={classNames({'form-control': true,
-        'is-invalid': !formValid.firstname && formDirty.firstname, 'is-valid': formValid.firstname && formDirty.firstname})} 
-      id="firstname" name="firstname" placeholder="nome"
-      value={formState.firstname} onChange={setInput}/>
-      {(!formValid.firstname && formDirty.firstname) && <div className="invalid-feedback">
+      <input type="text" id="firstname" placeholder="nome"
+        className={classNames({'form-control': true, 'is-invalid': !!formState.errors.firstname, 'is-valid': false})} 
+        {...register("firstname", {required: true})}/>
+        {(!!formState.errors.firstname) && <div className="invalid-feedback">
           Il Nome è richiesto
       </div>}
     </div>
     <div className="form-group">
       <label htmlFor="lastname">Cognome</label>
       <input type="text"
-      className={classNames({'form-control': true, 
-        'is-invalid': !formValid.lastname && formDirty.lastname, 'is-valid': formValid.lastname && formDirty.lastname})} 
-      id="lastname" name="lastname" placeholder="cognome"
-      value={formState.lastname} onChange={setInput}/>
-      {(!formValid.lastname && formDirty.lastname) && <div className="invalid-feedback">
-         Il Cognome è richiesto
+      id="lastname" placeholder="cognome"
+        className={classNames({'form-control': true, 'is-invalid': !!formState.errors.lastname, 'is-valid': false})}
+        {...register("lastname", {required: true})}/>
+      {(!!formState.errors.lastname) && <div className="invalid-feedback">
+          Il Cognome è richiesto
       </div>}
     </div>
     <div className="form-group">
       <label htmlFor="age">Età</label>
-      <input type="text"
-       className={classNames({'form-control': true,
-       'is-invalid': !formValid.age && formDirty.age, 'is-valid': formValid.age && formDirty.age})} 
-      id="age" name="age" placeholder="Età"
-      value={formState.age} onChange={setInput}/>
-      {(!formValid.age && formDirty.age) && <div className="invalid-feedback">
-         Età non valida
+      <input type="text" id="age" placeholder="Età"
+      className={classNames({'form-control': true, 'is-invalid': !!formState.errors.age, 'is-valid': false})}
+      {...register("age", {required: true, pattern: ageRgx})}/>
+      {(!!formState.errors.age) && <div className="invalid-feedback">
+          {formState.errors.age.type === 'required' && <span>Età obbligatoria</span>}
+          {formState.errors.age.type === 'pattern' && <span>Età errata</span>}
       </div>}
     </div>
-    <div className="form-check">
-      <input type="radio" className="form-radio-input" name="gender" value="Male" onChange={setInput}/><span>Maschio</span><br/>
-      <input type="radio" className="form-radio-input" name="gender" value="Female" onChange={setInput}/><span>Femmina</span><br/>
-      <input type="radio" className="form-radio-input"  name="gender" value="NB" onChange={setInput}/><span>Non binario</span><br/>
+    <div className="form-group">
+      <div className="form-check">
+        <input className="form-check-input" type="radio" id="male" value="Male" {...register("gender", {required: true})}/>
+        <label className="form-check-label" htmlFor="male">
+          Maschio
+        </label>
+      </div>
+      <div className="form-check">
+        <input className="form-check-input" type="radio" id="Female" value="Female" {...register("gender", {required: true})}/>
+        <label className="form-check-label" htmlFor="Female">
+          Femmina
+        </label>
+      </div>
+      <div className="form-check">
+        <input className="form-check-input" type="radio" id="NB" value="NB" {...register("gender", {required: true})}/>
+        <label className="form-check-label" htmlFor="NB">
+          Non binario
+        </label>
+      </div>
+      {(!!formState.errors.gender || true) && <div style={{color: 'red'}}>Specificare genere</div>}
     </div>
-    <button type="submit" className="btn btn-primary" disabled={!isFormValid()}>Submit</button>
+    <button type="submit" className="btn btn-primary">Submit</button>
     </form>
   )
 }
