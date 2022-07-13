@@ -1,7 +1,8 @@
 import React, { ChangeEvent, FormEvent, useState } from 'react';
 import classNames from 'classnames';
 import './App.css';
-import { useForm } from 'react-hook-form';
+import { FormState, useForm } from 'react-hook-form';
+import { TextBox } from './components/TextBox';
 
 interface userFormModel {
   firstname: string;
@@ -10,25 +11,10 @@ interface userFormModel {
   gender?: 'Male' | 'Female' | 'NB'
 }
 
-interface userFormValidModel {
-  firstname: boolean;
-  lastname: boolean;
-  age: boolean;
-  gender: boolean;
-}
-
-interface userFormDirtyModel {
-  firstname: boolean;
-  lastname: boolean;
-  age: boolean;
-  gender: boolean;
-}
-
-
-
 const App: React.FC = () => {
 
-  const {register, handleSubmit, formState} = useForm<userFormModel>()
+  const {register, handleSubmit, formState} = useForm<userFormModel>();
+  const fs = formState as FormState<any>;
 
   const save = (e: any) => {
     
@@ -41,7 +27,13 @@ const App: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit(save)}>
-    <div className="form-group">
+      <TextBox fieldName="firstname" label="Nome" errors={{required: 'Il Nome è richiesto'}} 
+        register={register} formState={fs} validationOptions={{required: true}} />
+      <TextBox fieldName="lastname" label="Cognome" errors={{required: 'Il Cognome è richiesto'}}
+      register={register} formState={fs} validationOptions={{required: true}} />
+      <TextBox fieldName="age" label="Età"  errors={{required: 'Età obbligatoria', pattern: 'Età errata'}} 
+      register={register} formState={fs} validationOptions={{required: true, pattern: ageRgx}} />
+    {/* <div className="form-group">
       <label htmlFor="firstname">Nome</label>
       <input type="text" id="firstname" placeholder="nome"
         className={classNames({'form-control': true, 'is-invalid': !!formState.errors.firstname, 'is-valid': false})} 
@@ -89,8 +81,8 @@ const App: React.FC = () => {
           Non binario
         </label>
       </div>
-      {(!!formState.errors.gender || true) && <div style={{color: 'red'}}>Specificare genere</div>}
-    </div>
+      {(!!formState.errors.gender) && <div style={{color: 'red'}}>Specificare genere</div>}
+    </div> */}
     <button type="submit" className="btn btn-primary">Submit</button>
     </form>
   )
